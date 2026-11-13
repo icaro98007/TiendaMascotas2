@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PetShop POS - Punto de Venta</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+  <style>
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(18px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes popCheck {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.12); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .cart-item-anim {
+      animation: slideInRight 0.22s ease-out forwards;
+    }
+    .check-pop {
+      animation: popCheck 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col font-sans">
+
+  <!-- Barra Superior -->
+  <header class="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between shadow-md z-10">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-900 font-bold text-xl shadow">
+        <i class="fa-solid fa-paw"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-lg leading-tight tracking-wide">Huellitas Felices <span class="text-amber-400 font-normal text-sm">| Terminal POS</span></h1>
+        <p class="text-xs text-slate-400">Sistema de Gestión de Inventario y Ventas</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <span id="live-clock" class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 font-mono"></span>
+      <a
+        href="admin.html"
+        class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow"
+      >
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Panel Admin</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal 70 / 30 -->
+  <main class="flex-1 flex overflow-hidden">
+
+    <!-- IZQUIERDA (70%): Buscador, Categorías y Catálogo -->
+    <section class="w-[70%] h-full flex flex-col p-6 overflow-hidden">
+      <!-- Buscador y Filtros -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-5 flex flex-col gap-3">
+        <div class="relative flex items-center">
+          <i class="fa-solid fa-barcode text-slate-400 absolute left-4 text-lg"></i>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Escanear código de barras o buscar producto por nombre / categoría..."
+            class="w-full pl-12 pr-28 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+            autofocus
+          />
+          <button
+            id="clear-search-btn"
+            class="hidden absolute right-3 text-xs text-slate-400 hover:text-slate-600 bg-slate-200/70 px-2.5 py-1 rounded-md"
+          >
+            Limpiar
+          </button>
+        </div>
+
+        <!-- Píldoras de Categorías -->
+        <div id="category-pills" class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <button data-cat="TODOS" class="cat-btn bg-slate-900 text-white px-3.5 py-1.5 rounded-full font-medium transition">
+            Todos
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid de Productos -->
+      <div class="flex-1 overflow-y-auto pr-1">
+        <div id="products-loading" class="hidden py-16 text-center text-slate-400">
+          <i class="fa-solid fa-circle-notch fa-spin text-3xl text-amber-500 mb-2"></i>
+          <p class="text-sm">Cargando catálogo de productos...</p>
+        </div>
+
+        <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8"></div>
+      </div>
+    </section>
+
+    <!-- DERECHA (30%): Carrito de Compras Fijo -->
+    <aside class="w-[30%] h-full bg-white border-l border-slate-200 flex flex-col shadow-xl z-10">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+            <i class="fa-solid fa-cart-shopping"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-slate-800 text-base">Carrito de Venta</h2>
+            <p id="cart-count-subtitle" class="text-xs text-slate-400">0 artículos seleccionados</p>
+          </div>
+        </div>
+        <button
+          id="clear-cart-btn"
+          class="text-xs text-rose-500 hover:text-rose-700 font-medium px-2.5 py-1 rounded hover:bg-rose-50 transition"
+          title="Vaciar carrito"
+        >
+          <i class="fa-solid fa-trash-can mr-1"></i>Vaciar
+        </button>
+      </div>
+
+      <!-- Lista de Ítems en Carrito -->
+      <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <div id="empty-cart-view" class="h-full flex flex-col items-center justify-center text-slate-400 text-center px-6">
+          <i class="fa-solid fa-basket-shopping text-5xl mb-3 text-slate-200"></i>
+          <p class="font-medium text-slate-500 text-sm">El carrito está vacío</p>
+          <p class="text-xs mt-1">Haz clic en cualquier producto del catálogo o escanea su código para agregarlo.</p>
+        </div>
+      </div>
+
+      <!-- Resumen y Botón de Cobro -->
+      <div class="p-5 bg-slate-50 border-t border-slate-200 space-y-4">
+        <div class="space-y-1.5 text-sm">
+          <div class="flex justify-between text-slate-500">
+            <span>Subtotal</span>
+            <span id="cart-subtotal">$0.00</span>
+          </div>
+          <div class="flex justify-between text-slate-500 text-xs">
+            <span>Impuestos incluidos</span>
+            <span>IVA 0% (Exento/Incluido)</span>
+          </div>
+          <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
+            <span class="font-bold text-slate-800 text-base">Total a Pagar</span>
+            <span id="cart-total" class="font-extrabold text-2xl text-emerald-600">$0.00</span>
+          </div>
+        </div>
+
+        <button
+          id="open-checkout-btn"
+          disabled
+          class="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-base"
+        >
+          <i class="fa-solid fa-cash-register"></i>
+          <span>Proceder al Pago</span>
+        </button>
+      </div>
+    </aside>
+  </main>
+
+  <!-- MODAL DE CHECKOUT Y REGISTRO/BÚSQUEDA DE CLIENTE (Con Backdrop Blur) -->
+  <div
+    id="checkout-modal"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"
+  >
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden">
+
+      <!-- Vista del Formulario de Cobro -->
+      <div id="checkout-form-view">
+        <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-credit-card text-amber-400"></i>
+            <h3 class="font-bold text-base">Confirmación de Pago y Cliente</h3>
+          </div>
+          <button id="close-modal-btn" class="text-slate-400 hover:text-white">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <!-- Total Destacado -->
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p class="text-xs uppercase font-bold tracking-wider text-emerald-700">Total de la Venta</p>
+              <p id="modal-items-summary" class="text-xs text-emerald-600 mt-0.5">0 artículos</p>
+            </div>
+            <span id="modal-total-amount" class="text-3xl font-extrabold text-emerald-700">$0.00</span>
+          </div>
+
+          <!-- Selector ¿Cliente Nuevo o Existente? (Diagrama 5.1) -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Identificación del Cliente
+            </label>
+            <div class="grid grid-cols-3 gap-2 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+              <button
+                type="button"
+                data-mode="mostrador"
+                class="client-mode-btn py-2 px-3 rounded-lg bg-white text-slate-900 shadow-sm transition"
+              >
+                <i class="fa-solid fa-store mr-1"></i>Mostrador
+              </button>
+              <button
+                type="button"
+                data-mode="existente"
+                class="client-mode-btn py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900 transition"
+              >
+                <i class="fa-solid fa-magnifying-glass mr-1"></i>Cliente Existente
+              </button>
+              <button
+                type="button"
+                data-mode="nuevo"
+                class="client-mode-btn py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900 transition"
+              >
+                <i class="fa-solid fa-user-plus mr-1"></i>Cliente Nuevo
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel: Cliente Existente (Búsqueda por teléfono) -->
+          <div id="panel-cliente-existente" class="hidden space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block text-xs font-semibold text-slate-700">Buscar por Teléfono o Nombre</label>
+            <div class="flex gap-2">
+              <input
+                id="search-client-phone"
+                type="text"
+                placeholder="Ej. 555-0101 o nombre..."
+                class="flex-1 px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                id="btn-search-client"
+                type="button"
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition"
+              >
+                Buscar
+              </button>
+            </div>
+            <div id="client-search-result" class="text-xs text-slate-600"></div>
+          </div>
+
+          <!-- Panel: Cliente Nuevo (Nombre y Teléfono) -->
+          <div id="panel-cliente-nuevo" class="hidden space-y-3 bg-amber-50/60 p-4 rounded-xl border border-amber-200">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo *</label>
+                <input
+                  id="new-client-name"
+                  type="text"
+                  placeholder="Ej. Laura Méndez"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono *</label>
+                <input
+                  id="new-client-phone"
+                  type="text"
+                  placeholder="Ej. 555-0199"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Email (Opcional)</label>
+              <input
+                id="new-client-email"
+                type="email"
+                placeholder="cliente@correo.com"
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+              />
+            </div>
+          </div>
+
+          <!-- Alerta de Error en Checkout -->
+          <div
+            id="checkout-error-box"
+            class="hidden bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
+          >
+            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
+            <span id="checkout-error-text"></span>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button
+              id="cancel-checkout-btn"
+              type="button"
+              class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 text-sm font-semibold transition"
+            >
+              Cancelar
+            </button>
+            <button
+              id="confirm-payment-btn"
+              type="button"
+              class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/25 flex items-center gap-2 transition"
+            >
+              <i class="fa-solid fa-check-circle"></i>
+              <span>Confirmar Pago Total</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Éxito Animada -->
+      <div id="checkout-success-view" class="hidden p-8 text-center space-y-4">
+        <div class="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-4xl check-pop">
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <h3 class="text-xl font-extrabold text-slate-800">¡Venta Registrada con Éxito!</h3>
+        <p id="success-receipt-details" class="text-sm text-slate-500"></p>
+        <div class="pt-3">
+          <button
+            id="new-sale-btn"
+            class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition"
+          >
+            Nueva Venta
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notificación Toast Flotante -->
+  <div
+    id="toast-notification"
+    class="fixed bottom-5 left-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs font-medium hidden items-center gap-2.5 z-50"
+  >
+    <i id="toast-icon" class="fa-solid fa-circle-info text-amber-400"></i>
+    <span id="toast-message"></span>
+  </div>
+
+  <script src="js/pos.js"></script>
+</body>
+</html>
