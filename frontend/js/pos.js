@@ -82,17 +82,25 @@ async function cargarProductos(terminoBusqueda = "") {
 }
 
 function renderizarCategorias() {
-  const categorias = ["TODOS", ...new Set(catalogoProductos.map((p) => p.categoria))];
+  const mapaCategorias = new Map();
+  catalogoProductos.forEach((p) => {
+    const raw = (p.categoria || "General").trim();
+    const key = raw.toLowerCase();
+    if (!mapaCategorias.has(key)) {
+      mapaCategorias.set(key, raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase());
+    }
+  });
+  const categorias = ["TODOS", ...mapaCategorias.values()];
   categoryPills.innerHTML = categorias
     .map((cat) => {
-      const activo = cat === categoriaActiva;
+      const activo = cat.toLowerCase() === categoriaActiva.toLowerCase();
       return `
         <button
           data-cat="${cat}"
           class="cat-btn px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition ${
             activo
-              ? "bg-gray-900 text-white shadow-sm"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-green-800 text-white shadow-sm"
+              : "bg-green-50 text-green-900 border border-green-200 hover:bg-green-100"
           }"
         >
           ${cat}
@@ -133,7 +141,9 @@ function renderizarCatalogo() {
   const filtrados =
     categoriaActiva === "TODOS"
       ? catalogoProductos
-      : catalogoProductos.filter((p) => p.categoria === categoriaActiva);
+      : catalogoProductos.filter(
+          (p) => (p.categoria || "").trim().toLowerCase() === categoriaActiva.toLowerCase()
+        );
 
   if (filtrados.length === 0) {
     productsGrid.innerHTML = `

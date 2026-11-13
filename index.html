@@ -57,14 +57,17 @@
     .shake-anim {
       animation: shakeError 0.4s ease-in-out;
     }
+    .malu-light-green-bg {
+      background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+    }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+<body class="malu-light-green-bg text-gray-800 font-sans min-h-screen">
 
   <!-- =====================================================================
        VISTA 1 (PREDETERMINADA AL ABRIR LA PÁGINA): PÁGINA DE VENTAS (POS)
        ===================================================================== -->
-  <div id="pos-app-view" class="h-screen overflow-hidden flex flex-col bg-gray-100">
+  <div id="pos-app-view" class="h-screen overflow-hidden flex flex-col malu-light-green-bg">
     <!-- Barra Superior del POS con Identidad MALU MASCOTAS -->
     <header class="malu-header-bg text-white px-6 py-2.5 flex items-center justify-between shadow-md z-10 border-b-2 border-yellow-500">
       <div class="flex items-center gap-3">
@@ -254,7 +257,7 @@
   <!-- =====================================================================
        VISTA 2 (SOLO AL ENTRAR A PANEL ADMINISTRADOR): LOGIN Y DASHBOARD
        ===================================================================== -->
-  <div id="admin-app-view" class="hidden min-h-screen bg-gray-50 text-gray-800">
+  <div id="admin-app-view" class="hidden min-h-screen malu-light-green-bg text-gray-800">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
 
       <!-- 2A. Formulario de Login Segregado (cuando entra al Panel Admin) -->
