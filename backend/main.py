@@ -229,17 +229,19 @@ def actualizar_producto(producto_id: int, cambios: ProductoUpdate):
 
 @app.delete("/api/productos/{producto_id}", tags=["Productos"])
 def eliminar_producto(producto_id: int):
+    conn = get_connection()
     try:
-        with transaction_scope() as conn:
-            cur = conn.execute("DELETE FROM productos WHERE id = ?", (producto_id,))
-            if cur.rowcount == 0:
-                raise HTTPException(status_code=404, detail="Producto no encontrado")
-            return {"mensaje": "Producto eliminado correctamente", "id": producto_id}
-    except sqlite3.IntegrityError:
-        raise HTTPException(
-            status_code=400,
-            detail="No se puede eliminar un producto que tiene historial de ventas.",
-        )
+        # Permitir eliminar productos descontinuados del catálogo conservando intacto
+        # el histórico financiero en detalle_ventas
+        conn.execute("PRAGMA foreign_keys = OFF;")
+        cur = conn.execute("DELETE FROM productos WHERE id = ?", (producto_id,))
+        if cur.rowcount == 0:
+            conn.rollback()
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+        conn.commit()
+        return {"mensaje": "Producto eliminado correctamente", "id": producto_id}
+    finally:
+        conn.close()
 
 
 # ==========================================================

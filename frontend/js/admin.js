@@ -323,6 +323,7 @@ function renderizarUltimasVentas(ventas) {
 const productModal = document.getElementById("product-modal");
 const productForm = document.getElementById("product-form");
 const prodFormError = document.getElementById("prod-form-error");
+const deleteProductModalBtn = document.getElementById("delete-product-modal-btn");
 const prodImageFile = document.getElementById("prod-image-file");
 const prodImageUrl = document.getElementById("prod-image-url");
 const prodImagePreview = document.getElementById("prod-image-preview");
@@ -386,6 +387,9 @@ function abrirModalProducto(producto = null) {
     prodImagePreview.src = imgActual;
     prodImageStatus.textContent = "Puedes seleccionar otra imagen para reemplazar la actual.";
     prodImageStatus.className = "text-xs text-gray-500";
+    if (deleteProductModalBtn) {
+      deleteProductModalBtn.classList.remove("hidden");
+    }
   } else {
     document.getElementById("product-modal-title").textContent = "Nuevo Producto";
     productForm.reset();
@@ -396,6 +400,9 @@ function abrirModalProducto(producto = null) {
     prodImageStatus.textContent =
       "Selecciona una imagen de tu equipo para guardarla en el catálogo.";
     prodImageStatus.className = "text-xs text-gray-500";
+    if (deleteProductModalBtn) {
+      deleteProductModalBtn.classList.add("hidden");
+    }
   }
   productModal.classList.remove("hidden");
   productModal.classList.add("flex");
@@ -404,6 +411,44 @@ function abrirModalProducto(producto = null) {
 function cerrarModalProducto() {
   productModal.classList.add("hidden");
   productModal.classList.remove("flex");
+}
+
+// Eliminar producto descontinuado desde el modal de Editar
+if (deleteProductModalBtn) {
+  deleteProductModalBtn.addEventListener("click", async () => {
+    const id = document.getElementById("prod-id").value;
+    const nombre = document.getElementById("prod-name").value || "este producto";
+    if (!id) return;
+
+    prodFormError.classList.add("hidden");
+    deleteProductModalBtn.disabled = true;
+    deleteProductModalBtn.textContent = "Eliminando...";
+
+    try {
+      const resp = await fetch(`${API_BASE}/productos/${id}`, {
+        method: "DELETE",
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        prodFormError.textContent = data.detail || `No se pudo eliminar "${nombre}"`;
+        prodFormError.classList.remove("hidden");
+        return;
+      }
+
+      cerrarModalProducto();
+      mostrarDashboard(false);
+      if (typeof cargarProductos === "function") {
+        cargarProductos("");
+      }
+    } catch (err) {
+      prodFormError.textContent = "Error al conectar con el servidor para eliminar.";
+      prodFormError.classList.remove("hidden");
+    } finally {
+      deleteProductModalBtn.disabled = false;
+      deleteProductModalBtn.textContent = "🗑️ Eliminar Producto";
+    }
+  });
 }
 
 document.getElementById("open-new-product-btn").addEventListener("click", () => abrirModalProducto());
