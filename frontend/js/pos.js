@@ -110,6 +110,25 @@ function renderizarCategorias() {
   });
 }
 
+function obtenerImagenProducto(p) {
+  if (p.imagen) return p.imagen;
+  // Mapeo de las 6 imágenes de catálogo cargadas en /img/producto_1.webp .. producto_6.webp
+  const imagenesCatalogo = [
+    "img/producto_1.webp",
+    "img/producto_3.webp",
+    "img/producto_2.webp",
+    "img/producto_4.webp",
+    "img/producto_5.webp",
+    "img/producto_6.webp",
+    "img/producto_1.webp",
+    "img/producto_4.webp",
+    "img/producto_2.webp",
+    "img/producto_5.webp",
+  ];
+  const idx = ((p.id || 1) - 1) % imagenesCatalogo.length;
+  return imagenesCatalogo[idx];
+}
+
 function renderizarCatalogo() {
   const filtrados =
     categoriaActiva === "TODOS"
@@ -152,6 +171,8 @@ function renderizarCatalogo() {
                 ${sinStock ? "Agotado" : `Stock: ${p.stock_actual}`}
               </span>
             </div>
+
+            <img src="${obtenerImagenProducto(p)}" alt="Producto" class="w-full h-32 object-contain bg-white mb-3 rounded-md" />
 
             <h3 class="font-bold text-gray-900 text-sm mt-1">${p.nombre}</h3>
             <p class="text-xs text-gray-400 font-mono mt-1">Código: ${p.codigo_barras}</p>

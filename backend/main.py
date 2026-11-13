@@ -569,3 +569,10 @@ if FRONTEND_DIR.exists():
         if target.exists():
             return FileResponse(str(target), media_type="text/css")
         raise HTTPException(status_code=404, detail="Archivo CSS no encontrado")
+
+    @app.get("/img/{filename}", include_in_schema=False)
+    def img_files(filename: str):
+        target = FRONTEND_DIR / "img" / filename
+        if target.exists():
+            return FileResponse(str(target))
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
