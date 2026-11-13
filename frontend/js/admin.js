@@ -14,7 +14,7 @@ const loginErrorText = document.getElementById("login-error-text");
 const dashboardLayout = document.getElementById("dashboard-layout");
 
 // Animación de contador numérico de 0 a N
-function animarContador(elemento, valorFinal, esMoneda = false, duracion = 850) {
+function animarContador(elemento, valorFinal, esMoneda = false, duracion = 750) {
   const inicio = 0;
   const startTime = performance.now();
 
@@ -39,7 +39,7 @@ function animarContador(elemento, valorFinal, esMoneda = false, duracion = 850) 
   requestAnimationFrame(frame);
 }
 
-// Login Handler
+// Manejo de inicio de sesión
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   loginError.classList.add("hidden");
@@ -74,6 +74,7 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
+// Cerrar sesión -> muestra el formulario de login segregado y oculta el dashboard
 document.getElementById("logout-btn").addEventListener("click", () => {
   tokenJWT = null;
   localStorage.removeItem("petshop_jwt");
@@ -105,6 +106,11 @@ async function mostrarDashboard() {
     loginScreen.classList.add("hidden");
     dashboardLayout.classList.remove("hidden");
 
+    if (data.usuario_autenticado) {
+      document.getElementById("admin-user-label").textContent =
+        `${data.usuario_autenticado.username} (${data.usuario_autenticado.rol})`;
+    }
+
     renderizarKPIs(data.kpis);
     renderizarGrafico7Dias(data.historico_7_dias);
     inventarioCache = data.inventario;
@@ -133,7 +139,9 @@ function renderizarKPIs(kpis) {
 }
 
 function renderizarGrafico7Dias(historico) {
-  const ctx = document.getElementById("salesChart").getContext("2d");
+  const canvas = document.getElementById("salesChart");
+  if (!canvas || typeof Chart === "undefined") return;
+  const ctx = canvas.getContext("2d");
   const labels = historico.map((d) => d.etiqueta);
   const valores = historico.map((d) => d.total);
 
@@ -149,11 +157,11 @@ function renderizarGrafico7Dias(historico) {
         {
           label: "Ventas ($)",
           data: valores,
-          borderColor: "#4f46e5",
-          backgroundColor: "rgba(79, 70, 229, 0.12)",
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.10)",
           borderWidth: 3,
-          pointBackgroundColor: "#f59e0b",
-          pointRadius: 5,
+          pointBackgroundColor: "#2563eb",
+          pointRadius: 4,
           tension: 0.35,
           fill: true,
         },
@@ -184,7 +192,7 @@ function renderizarAlertasCriticas(alertas) {
 
   if (alertas.length === 0) {
     container.innerHTML = `
-      <div class="h-full flex flex-col items-center justify-center text-center py-8 text-emerald-600">
+      <div class="h-full flex flex-col items-center justify-center text-center py-8 text-green-600">
         <i class="fa-solid fa-circle-check text-3xl mb-2"></i>
         <p class="text-xs font-bold">Todo el inventario está por encima del mínimo</p>
       </div>
@@ -195,14 +203,14 @@ function renderizarAlertasCriticas(alertas) {
   container.innerHTML = alertas
     .map(
       (p) => `
-      <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-2 animate-pulse">
+      <div class="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center justify-between gap-2 animate-pulse">
         <div class="min-w-0">
-          <p class="text-xs font-bold text-rose-900 truncate">${p.nombre}</p>
-          <p class="text-[11px] text-rose-600">Código: ${p.codigo_barras}</p>
+          <p class="text-xs font-bold text-red-900 truncate">${p.nombre}</p>
+          <p class="text-xs text-red-600">Código: ${p.codigo_barras}</p>
         </div>
-        <div class="text-right shrink-0">
-          <span class="text-xs font-extrabold text-rose-700 block">Stock: ${p.stock_actual}</span>
-          <span class="text-[10px] text-rose-500">Mín: ${p.stock_minimo}</span>
+        <div class="text-right">
+          <span class="text-xs font-bold text-red-700 block">Stock: ${p.stock_actual}</span>
+          <span class="text-xs text-red-500">Mín: ${p.stock_minimo}</span>
         </div>
       </div>
     `
@@ -216,31 +224,31 @@ function renderizarTablaInventario(productos) {
     .map((p) => {
       const esCritico = p.stock_actual <= p.stock_minimo;
       const rowClass = esCritico
-        ? "bg-rose-50/90 animate-pulse text-rose-900 font-medium"
-        : "hover:bg-slate-50";
+        ? "bg-red-50 animate-pulse text-red-900 font-medium"
+        : "hover:bg-gray-50";
       const badgeHtml = esCritico
-        ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-600 text-white shadow-sm">
+        ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-600 text-white">
              <i class="fa-solid fa-bell"></i> Crítico
            </span>`
-        : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+        : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
              <i class="fa-solid fa-check"></i> Normal
            </span>`;
 
       return `
         <tr class="${rowClass} transition">
           <td class="py-3 px-4 font-mono text-xs">${p.codigo_barras}</td>
-          <td class="py-3 px-4 font-bold">${p.nombre}</td>
-          <td class="py-3 px-4 text-xs">${p.categoria}</td>
-          <td class="py-3 px-4 text-right">$${Number(p.precio_costo).toFixed(2)}</td>
-          <td class="py-3 px-4 text-right font-bold">$${Number(p.precio_venta).toFixed(2)}</td>
-          <td class="py-3 px-4 text-center font-bold">${p.stock_actual} <span class="text-xs font-normal text-slate-400">/ ${p.stock_minimo}</span></td>
+          <td class="py-3 px-4 font-bold text-gray-900">${p.nombre}</td>
+          <td class="py-3 px-4 text-xs text-gray-600">${p.categoria}</td>
+          <td class="py-3 px-4 text-right text-gray-600">$${Number(p.precio_costo).toFixed(2)}</td>
+          <td class="py-3 px-4 text-right font-bold text-gray-900">$${Number(p.precio_venta).toFixed(2)}</td>
+          <td class="py-3 px-4 text-center font-bold">${p.stock_actual} <span class="text-xs font-normal text-gray-400">/ ${p.stock_minimo}</span></td>
           <td class="py-3 px-4 text-center">${badgeHtml}</td>
           <td class="py-3 px-4 text-right">
             <button
               data-edit="${p.id}"
-              class="px-2.5 py-1 rounded-lg bg-slate-200/80 hover:bg-indigo-600 hover:text-white text-slate-700 text-xs font-semibold transition"
+              class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-md px-3 py-1 text-xs font-medium transition"
             >
-              <i class="fa-solid fa-pen-to-square"></i> Editar
+              <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
             </button>
           </td>
         </tr>
@@ -259,19 +267,19 @@ function renderizarTablaInventario(productos) {
 function renderizarUltimasVentas(ventas) {
   const tbody = document.getElementById("recent-sales-body");
   if (!ventas || ventas.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400 text-xs">Aún no hay ventas registradas</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-gray-400 text-xs">Aún no hay ventas registradas</td></tr>`;
     return;
   }
 
   tbody.innerHTML = ventas
     .map(
       (v) => `
-      <tr class="hover:bg-slate-50">
-        <td class="py-3 px-4 font-mono font-bold text-indigo-600">#${v.id}</td>
-        <td class="py-3 px-4 text-xs text-slate-500">${v.fecha_venta}</td>
-        <td class="py-3 px-4 font-semibold">${v.cliente_nombre}</td>
-        <td class="py-3 px-4 text-xs text-slate-500">${v.cliente_telefono}</td>
-        <td class="py-3 px-4 text-right font-extrabold text-emerald-600">$${Number(v.total).toFixed(2)}</td>
+      <tr class="hover:bg-gray-50">
+        <td class="py-3 px-4 font-mono font-bold text-blue-600">#${v.id}</td>
+        <td class="py-3 px-4 text-xs text-gray-500">${v.fecha_venta}</td>
+        <td class="py-3 px-4 font-medium text-gray-900">${v.cliente_nombre}</td>
+        <td class="py-3 px-4 text-xs text-gray-500">${v.cliente_telefono}</td>
+        <td class="py-3 px-4 text-right font-bold text-green-600">$${Number(v.total).toFixed(2)}</td>
       </tr>
     `
     )
@@ -350,7 +358,10 @@ productForm.addEventListener("submit", async (e) => {
   mostrarDashboard();
 });
 
-// Auto-inicio si ya hay token guardado
+// Inicializar estado visual al cargar la página
 if (tokenJWT) {
   mostrarDashboard();
+} else {
+  loginScreen.classList.remove("hidden");
+  dashboardLayout.classList.add("hidden");
 }

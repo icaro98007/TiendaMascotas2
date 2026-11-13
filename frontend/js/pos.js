@@ -5,10 +5,9 @@ const API_BASE = window.location.port === "8080"
 let catalogoProductos = [];
 let carrito = [];
 let categoriaActiva = "TODOS";
-let modoCliente = "mostrador"; // 'mostrador' | 'existente' | 'nuevo'
+let modoCliente = "mostrador";
 let clienteExistenteSeleccionado = null;
 
-// Elementos del DOM
 const searchInput = document.getElementById("search-input");
 const clearSearchBtn = document.getElementById("clear-search-btn");
 const categoryPills = document.getElementById("category-pills");
@@ -23,7 +22,6 @@ const cartTotalEl = document.getElementById("cart-total");
 const clearCartBtn = document.getElementById("clear-cart-btn");
 const openCheckoutBtn = document.getElementById("open-checkout-btn");
 
-// Modal Checkout
 const checkoutModal = document.getElementById("checkout-modal");
 const checkoutFormView = document.getElementById("checkout-form-view");
 const checkoutSuccessView = document.getElementById("checkout-success-view");
@@ -36,7 +34,6 @@ const modalItemsSummary = document.getElementById("modal-items-summary");
 const checkoutErrorBox = document.getElementById("checkout-error-box");
 const checkoutErrorText = document.getElementById("checkout-error-text");
 
-// Reloj en tiempo real
 function actualizarReloj() {
   const ahora = new Date();
   const el = document.getElementById("live-clock");
@@ -50,15 +47,12 @@ function actualizarReloj() {
 setInterval(actualizarReloj, 1000);
 actualizarReloj();
 
-// Notificación Toast
 function mostrarToast(mensaje, esError = false) {
   const toast = document.getElementById("toast-notification");
   const icon = document.getElementById("toast-icon");
   const text = document.getElementById("toast-message");
 
-  icon.className = esError
-    ? "fa-solid fa-circle-exclamation text-rose-400"
-    : "fa-solid fa-circle-check text-emerald-400";
+  icon.textContent = esError ? "⚠️" : "✅";
   text.textContent = mensaje;
   toast.classList.remove("hidden");
   toast.classList.add("flex");
@@ -69,7 +63,6 @@ function mostrarToast(mensaje, esError = false) {
   }, 3000);
 }
 
-// Cargar productos desde la API
 async function cargarProductos(terminoBusqueda = "") {
   productsLoading.classList.remove("hidden");
   try {
@@ -98,8 +91,8 @@ function renderizarCategorias() {
           data-cat="${cat}"
           class="cat-btn px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition ${
             activo
-              ? "bg-slate-900 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-gray-900 text-white shadow-sm"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }"
         >
           ${cat}
@@ -117,15 +110,6 @@ function renderizarCategorias() {
   });
 }
 
-function iconoPorCategoria(categoria) {
-  const cat = (categoria || "").toLowerCase();
-  if (cat.includes("alimento")) return "fa-bowl-food text-amber-500 bg-amber-50";
-  if (cat.includes("juguete")) return "fa-baseball text-indigo-500 bg-indigo-50";
-  if (cat.includes("higiene") || cat.includes("salud")) return "fa-Pump-soap fa-kit-medical text-emerald-500 bg-emerald-50";
-  if (cat.includes("accesorio")) return "fa-tag text-purple-500 bg-purple-50";
-  return "fa-paw text-slate-600 bg-slate-100";
-}
-
 function renderizarCatalogo() {
   const filtrados =
     categoriaActiva === "TODOS"
@@ -134,9 +118,8 @@ function renderizarCatalogo() {
 
   if (filtrados.length === 0) {
     productsGrid.innerHTML = `
-      <div class="col-span-full bg-white rounded-2xl p-12 text-center border border-slate-200 text-slate-400">
-        <i class="fa-solid fa-box-open text-4xl mb-3"></i>
-        <p class="font-semibold text-slate-600">No se encontraron productos</p>
+      <div class="col-span-full bg-white rounded-xl p-12 text-center border border-gray-200 text-gray-400">
+        <p class="font-semibold text-gray-600">No se encontraron productos</p>
         <p class="text-xs mt-1">Intenta con otro término de búsqueda o categoría.</p>
       </div>
     `;
@@ -148,49 +131,42 @@ function renderizarCatalogo() {
       const sinStock = p.stock_actual <= 0;
       const stockCritico = p.stock_actual > 0 && p.stock_actual <= p.stock_minimo;
       const badgeColor = sinStock
-        ? "bg-rose-100 text-rose-700 border-rose-200"
+        ? "bg-red-100 text-red-700 border-red-200"
         : stockCritico
-        ? "bg-amber-100 text-amber-800 border-amber-300 animate-pulse"
-        : "bg-emerald-50 text-emerald-700 border-emerald-200";
+        ? "bg-yellow-100 text-yellow-800 border-yellow-300 animate-pulse"
+        : "bg-green-50 text-green-700 border-green-200";
 
       return `
         <div
           data-id="${p.id}"
-          class="product-card bg-white rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-400 transition flex flex-col justify-between ${
+          class="product-card bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-400 transition flex flex-col justify-between ${
             sinStock ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
           }"
         >
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg ${iconoPorCategoria(
+              <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">${
                 p.categoria
-              )}">
-                <i class="fa-solid fa-paw"></i>
-              </div>
-              <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${badgeColor}">
+              }</span>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border ${badgeColor}">
                 ${sinStock ? "Agotado" : `Stock: ${p.stock_actual}`}
               </span>
             </div>
 
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">${
-              p.categoria
-            }</span>
-            <h3 class="font-bold text-slate-800 text-sm mt-0.5 line-clamp-2">${p.nombre}</h3>
-            <p class="text-[11px] text-slate-400 font-mono mt-1">
-              <i class="fa-solid fa-barcode mr-1"></i>${p.codigo_barras}
-            </p>
+            <h3 class="font-bold text-gray-900 text-sm mt-1">${p.nombre}</h3>
+            <p class="text-xs text-gray-400 font-mono mt-1">Código: ${p.codigo_barras}</p>
           </div>
 
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-lg font-extrabold text-slate-900">$${Number(p.precio_venta).toFixed(
+          <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-xl font-bold text-gray-900">$${Number(p.precio_venta).toFixed(
               2
             )}</span>
             <button
               type="button"
               ${sinStock ? "disabled" : ""}
-              class="w-8 h-8 rounded-lg bg-slate-900 hover:bg-amber-500 hover:text-slate-900 text-white flex items-center justify-center transition disabled:bg-slate-200"
+              class="px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
             >
-              <i class="fa-solid fa-plus text-xs"></i>
+              + Agregar
             </button>
           </div>
         </div>
@@ -206,7 +182,6 @@ function renderizarCatalogo() {
   });
 }
 
-// Gestión del Carrito en Memoria
 function agregarAlCarrito(productoId) {
   const producto = catalogoProductos.find((p) => p.id === productoId);
   if (!producto) return;
@@ -276,36 +251,36 @@ function renderizarCarrito() {
       totalUnidades += cantidad;
       montoTotal += subtotal;
       return `
-        <div class="cart-item-anim bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between gap-2">
+        <div class="cart-item-anim bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-2">
           <div class="min-w-0 flex-1">
-            <h4 class="font-bold text-slate-800 text-xs truncate">${producto.nombre}</h4>
-            <p class="text-[11px] text-slate-500">
+            <h4 class="font-bold text-gray-900 text-xs truncate">${producto.nombre}</h4>
+            <p class="text-xs text-gray-500">
               $${Number(producto.precio_venta).toFixed(2)} c/u
             </p>
           </div>
 
-          <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-1.5 py-1">
+          <div class="flex items-center gap-1.5 bg-white border border-gray-200 rounded-md px-1.5 py-1">
             <button
               type="button"
               data-action="dec"
               data-id="${producto.id}"
-              class="w-6 h-6 rounded hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs"
+              class="w-6 h-6 rounded hover:bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold"
             >
-              <i class="fa-solid fa-minus"></i>
+              -
             </button>
             <span class="w-6 text-center font-bold text-xs">${cantidad}</span>
             <button
               type="button"
               data-action="inc"
               data-id="${producto.id}"
-              class="w-6 h-6 rounded hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs"
+              class="w-6 h-6 rounded hover:bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold"
             >
-              <i class="fa-solid fa-plus"></i>
+              +
             </button>
           </div>
 
-          <div class="text-right min-w-[68px]">
-            <span class="font-extrabold text-slate-900 text-xs block">$${subtotal.toFixed(2)}</span>
+          <div class="text-right" style="min-width: 68px;">
+            <span class="font-bold text-gray-900 text-xs block">$${subtotal.toFixed(2)}</span>
           </div>
         </div>
       `;
@@ -326,7 +301,6 @@ function renderizarCarrito() {
   });
 }
 
-// Eventos de búsqueda en tiempo real
 let debounceTimer = null;
 searchInput.addEventListener("input", () => {
   const val = searchInput.value.trim();
@@ -338,7 +312,6 @@ searchInput.addEventListener("input", () => {
   }, 180);
 });
 
-// Escaneo directo con Enter (si coincide código de barras exacto, lo añade al carrito)
 searchInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     const val = searchInput.value.trim();
@@ -367,9 +340,6 @@ clearCartBtn.addEventListener("click", () => {
   renderizarCarrito();
 });
 
-// ==========================================================
-// FLUJO DEL MODAL DE CHECKOUT Y CLIENTES
-// ==========================================================
 function configurarModoCliente(modo) {
   modoCliente = modo;
   clienteExistenteSeleccionado = null;
@@ -379,10 +349,10 @@ function configurarModoCliente(modo) {
   document.querySelectorAll(".client-mode-btn").forEach((btn) => {
     if (btn.dataset.mode === modo) {
       btn.className =
-        "client-mode-btn py-2 px-3 rounded-lg bg-white text-slate-900 shadow-sm transition";
+        "client-mode-btn py-2 px-3 rounded-md bg-white text-gray-900 shadow-sm transition";
     } else {
       btn.className =
-        "client-mode-btn py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        "client-mode-btn py-2 px-3 rounded-md text-gray-600 hover:text-gray-900 transition";
     }
   });
 
@@ -398,12 +368,11 @@ document.querySelectorAll(".client-mode-btn").forEach((btn) => {
   btn.addEventListener("click", () => configurarModoCliente(btn.dataset.mode));
 });
 
-// Buscar cliente existente por teléfono
 document.getElementById("btn-search-client").addEventListener("click", async () => {
   const tel = document.getElementById("search-client-phone").value.trim();
   const resultDiv = document.getElementById("client-search-result");
   if (!tel) {
-    resultDiv.innerHTML = `<span class="text-rose-600 font-semibold">Ingresa un teléfono o nombre para buscar.</span>`;
+    resultDiv.innerHTML = `<span class="text-red-600 font-semibold">Ingresa un teléfono o nombre para buscar.</span>`;
     return;
   }
 
@@ -411,16 +380,15 @@ document.getElementById("btn-search-client").addEventListener("click", async () 
   const lista = await resp.json();
   if (lista.length === 0) {
     clienteExistenteSeleccionado = null;
-    resultDiv.innerHTML = `<span class="text-amber-700 font-medium">No se encontró cliente con "${tel}". Puedes registrarlo en la pestaña "Cliente Nuevo".</span>`;
+    resultDiv.innerHTML = `<span class="text-yellow-700 font-medium">No se encontró cliente con "${tel}". Puedes registrarlo en la pestaña "Cliente Nuevo".</span>`;
   } else {
     clienteExistenteSeleccionado = lista[0];
     resultDiv.innerHTML = `
-      <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-2.5 rounded-lg flex items-center justify-between">
+      <div class="bg-green-50 border border-green-200 text-green-800 p-2.5 rounded-lg flex items-center justify-between">
         <div>
-          <i class="fa-solid fa-user-check mr-1.5 text-emerald-600"></i>
           <strong>${clienteExistenteSeleccionado.nombre}</strong> (${clienteExistenteSeleccionado.telefono})
         </div>
-        <span class="text-[10px] uppercase font-bold bg-emerald-200 px-2 py-0.5 rounded">Seleccionado</span>
+        <span class="text-xs uppercase font-bold bg-green-200 px-2 py-0.5 rounded">Seleccionado</span>
       </div>
     `;
   }
@@ -452,7 +420,6 @@ function cerrarModalCheckout() {
 closeModalBtn.addEventListener("click", cerrarModalCheckout);
 cancelCheckoutBtn.addEventListener("click", cerrarModalCheckout);
 
-// Confirmar Pago Total -> POST /api/ventas
 confirmPaymentBtn.addEventListener("click", async () => {
   checkoutErrorBox.classList.add("hidden");
 
@@ -487,7 +454,7 @@ confirmPaymentBtn.addEventListener("click", async () => {
   }
 
   confirmPaymentBtn.disabled = true;
-  confirmPaymentBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>Procesando...</span>`;
+  confirmPaymentBtn.innerHTML = `<span>Procesando...</span>`;
 
   try {
     const resp = await fetch(`${API_BASE}/ventas`, {
@@ -503,13 +470,12 @@ confirmPaymentBtn.addEventListener("click", async () => {
       return;
     }
 
-    // Éxito: Mostrar animación de check, limpiar carrito y refrescar stock
     checkoutFormView.classList.add("hidden");
     checkoutSuccessView.classList.remove("hidden");
     const nombreCli = data.cliente ? data.cliente.nombre : "Cliente de Mostrador";
     document.getElementById("success-receipt-details").innerHTML = `
       Folio de Venta <strong>#${data.venta_id}</strong> &bull; Cliente: <strong>${nombreCli}</strong><br/>
-      Total Cobrado: <strong class="text-emerald-600">$${Number(data.total).toFixed(2)}</strong>
+      Total Cobrado: <strong class="text-green-600">$${Number(data.total).toFixed(2)}</strong>
     `;
 
     carrito = [];
@@ -520,7 +486,7 @@ confirmPaymentBtn.addEventListener("click", async () => {
     checkoutErrorBox.classList.remove("hidden");
   } finally {
     confirmPaymentBtn.disabled = false;
-    confirmPaymentBtn.innerHTML = `<i class="fa-solid fa-check-circle"></i><span>Confirmar Pago Total</span>`;
+    confirmPaymentBtn.innerHTML = `<span>Confirmar Pago Total</span>`;
   }
 });
 
@@ -529,5 +495,4 @@ newSaleBtn.addEventListener("click", () => {
   searchInput.focus();
 });
 
-// Inicializar catálogo al abrir el POS
 cargarProductos();
