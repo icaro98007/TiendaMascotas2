@@ -1,10 +1,12 @@
-const API_BASE = window.location.port === "8080"
-  ? "http://localhost:8000/api"
-  : "/api";
-
 let tokenJWT = null;
 let salesChartInstance = null;
 let inventarioCache = [];
+
+const posAppView = document.getElementById("pos-app-view");
+const adminAppView = document.getElementById("admin-app-view");
+const openAdminPanelBtn = document.getElementById("open-admin-panel-btn");
+const backToPosFromLogin = document.getElementById("back-to-pos-from-login");
+const goToPosBtn = document.getElementById("go-to-pos-btn");
 
 const loginScreen = document.getElementById("login-screen");
 const loginCard = document.getElementById("login-card");
@@ -12,6 +14,39 @@ const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const loginErrorText = document.getElementById("login-error-text");
 const dashboardLayout = document.getElementById("dashboard-layout");
+
+// Función para ir a la Página de Ventas (vista inicial por defecto)
+function abrirPaginaVentas() {
+  adminAppView.classList.add("hidden");
+  posAppView.classList.remove("hidden");
+  if (typeof cargarProductos === "function") {
+    const buscador = document.getElementById("search-input");
+    cargarProductos(buscador ? buscador.value.trim() : "");
+  }
+}
+
+// Función para abrir el Panel Administrador (solo cuando el usuario pulsa el botón)
+function abrirPanelAdministrador() {
+  posAppView.classList.add("hidden");
+  adminAppView.classList.remove("hidden");
+
+  if (tokenJWT) {
+    mostrarDashboard();
+  } else {
+    loginScreen.classList.remove("hidden");
+    dashboardLayout.classList.add("hidden");
+  }
+}
+
+if (openAdminPanelBtn) {
+  openAdminPanelBtn.addEventListener("click", abrirPanelAdministrador);
+}
+if (backToPosFromLogin) {
+  backToPosFromLogin.addEventListener("click", abrirPaginaVentas);
+}
+if (goToPosBtn) {
+  goToPosBtn.addEventListener("click", abrirPaginaVentas);
+}
 
 // Animación de contador numérico de 0 a N
 function animarContador(elemento, valorFinal, esMoneda = false, duracion = 750) {
@@ -39,7 +74,7 @@ function animarContador(elemento, valorFinal, esMoneda = false, duracion = 750) 
   requestAnimationFrame(frame);
 }
 
-// Manejo de inicio de sesión
+// Manejo de inicio de sesión en el Panel Administrador
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   loginError.classList.add("hidden");
@@ -65,7 +100,6 @@ loginForm.addEventListener("submit", async (e) => {
     }
 
     tokenJWT = data.access_token;
-    localStorage.setItem("petshop_jwt", tokenJWT);
     document.getElementById("admin-user-label").textContent = `${data.username} (${data.rol})`;
     mostrarDashboard();
   } catch (err) {
@@ -74,12 +108,13 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Cerrar sesión -> muestra el formulario de login segregado y oculta el dashboard
+// Cerrar sesión -> limpia el token y regresa a la Página de Ventas
 document.getElementById("logout-btn").addEventListener("click", () => {
   tokenJWT = null;
   localStorage.removeItem("petshop_jwt");
   dashboardLayout.classList.add("hidden");
   loginScreen.classList.remove("hidden");
+  abrirPaginaVentas();
 });
 
 async function mostrarDashboard() {
@@ -95,7 +130,6 @@ async function mostrarDashboard() {
     });
 
     if (resp.status === 401) {
-      localStorage.removeItem("petshop_jwt");
       tokenJWT = null;
       loginScreen.classList.remove("hidden");
       dashboardLayout.classList.add("hidden");
@@ -193,7 +227,6 @@ function renderizarAlertasCriticas(alertas) {
   if (alertas.length === 0) {
     container.innerHTML = `
       <div class="h-full flex flex-col items-center justify-center text-center py-8 text-green-600">
-        <i class="fa-solid fa-circle-check text-3xl mb-2"></i>
         <p class="text-xs font-bold">Todo el inventario está por encima del mínimo</p>
       </div>
     `;
@@ -228,10 +261,10 @@ function renderizarTablaInventario(productos) {
         : "hover:bg-gray-50";
       const badgeHtml = esCritico
         ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-600 text-white">
-             <i class="fa-solid fa-bell"></i> Crítico
+             Crítico
            </span>`
         : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-             <i class="fa-solid fa-check"></i> Normal
+             Normal
            </span>`;
 
       return `
@@ -248,7 +281,7 @@ function renderizarTablaInventario(productos) {
               data-edit="${p.id}"
               class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-md px-3 py-1 text-xs font-medium transition"
             >
-              <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
+              Editar
             </button>
           </td>
         </tr>
@@ -286,7 +319,6 @@ function renderizarUltimasVentas(ventas) {
     .join("");
 }
 
-// Modal de Producto (Crear / Editar)
 const productModal = document.getElementById("product-modal");
 const productForm = document.getElementById("product-form");
 const prodFormError = document.getElementById("prod-form-error");
@@ -358,16 +390,5 @@ productForm.addEventListener("submit", async (e) => {
   mostrarDashboard();
 });
 
-// Cerrar sesión al salir hacia el Punto de Venta para que el cajero no tenga acceso directo al Admin
-const goToPosLink = document.getElementById("go-to-pos-link");
-if (goToPosLink) {
-  goToPosLink.addEventListener("click", () => {
-    tokenJWT = null;
-    localStorage.removeItem("petshop_jwt");
-  });
-}
-
-// Al abrir admin.html siempre mostrar primero el Login de Administrador
-localStorage.removeItem("petshop_jwt");
-loginScreen.classList.remove("hidden");
-dashboardLayout.classList.add("hidden");
+// Garantizar que al cargar la página SIEMPRE arranque directo en la Página de Ventas (POS)
+abrirPaginaVentas();
