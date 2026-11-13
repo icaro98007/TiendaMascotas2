@@ -322,24 +322,79 @@ function renderizarUltimasVentas(ventas) {
 const productModal = document.getElementById("product-modal");
 const productForm = document.getElementById("product-form");
 const prodFormError = document.getElementById("prod-form-error");
+const prodImageFile = document.getElementById("prod-image-file");
+const prodImageUrl = document.getElementById("prod-image-url");
+const prodImagePreview = document.getElementById("prod-image-preview");
+const prodImageStatus = document.getElementById("prod-image-status");
+
+// Subir archivo inmediatamente al seleccionarlo y guardarlo en el servidor
+if (prodImageFile) {
+  prodImageFile.addEventListener("change", async () => {
+    const file = prodImageFile.files && prodImageFile.files[0];
+    if (!file) return;
+
+    prodImageStatus.textContent = "Subiendo y guardando imagen...";
+    prodImageStatus.className = "text-xs text-blue-600 font-semibold";
+
+    const formData = new FormData();
+    formData.append("archivo", file);
+
+    try {
+      const resp = await fetch(`${API_BASE}/upload-imagen`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        prodImageStatus.textContent = data.detail || "No se pudo subir la imagen.";
+        prodImageStatus.className = "text-xs text-red-600 font-semibold";
+        return;
+      }
+
+      prodImageUrl.value = data.imagen_url;
+      prodImagePreview.src = data.imagen_url;
+      prodImageStatus.textContent = `✓ Imagen guardada (${file.name})`;
+      prodImageStatus.className = "text-xs text-green-600 font-semibold";
+    } catch (err) {
+      prodImageStatus.textContent = "Error al subir la imagen al servidor.";
+      prodImageStatus.className = "text-xs text-red-600 font-semibold";
+    }
+  });
+}
 
 function abrirModalProducto(producto = null) {
   prodFormError.classList.add("hidden");
+  if (prodImageFile) prodImageFile.value = "";
   if (producto) {
     document.getElementById("product-modal-title").textContent = "Editar Producto / Stock";
     document.getElementById("prod-id").value = producto.id;
-    document.getElementById("prod-barcode").value = producto.codigo_barras;
+    document.getElementById("prod-barcode").value = producto.codigo_barras || "";
     document.getElementById("prod-category").value = producto.categoria;
     document.getElementById("prod-name").value = producto.nombre;
     document.getElementById("prod-cost").value = producto.precio_costo;
     document.getElementById("prod-price").value = producto.precio_venta;
     document.getElementById("prod-stock").value = producto.stock_actual;
     document.getElementById("prod-min").value = producto.stock_minimo;
+    const imgActual =
+      producto.imagen ||
+      (typeof obtenerImagenProducto === "function"
+        ? obtenerImagenProducto(producto)
+        : "img/producto_1.webp");
+    prodImageUrl.value = producto.imagen || "";
+    prodImagePreview.src = imgActual;
+    prodImageStatus.textContent = "Puedes seleccionar otra imagen para reemplazar la actual.";
+    prodImageStatus.className = "text-xs text-gray-500";
   } else {
     document.getElementById("product-modal-title").textContent = "Nuevo Producto";
     productForm.reset();
     document.getElementById("prod-id").value = "";
     document.getElementById("prod-min").value = 5;
+    prodImageUrl.value = "";
+    prodImagePreview.src = "img/producto_1.webp";
+    prodImageStatus.textContent =
+      "Selecciona una imagen de tu equipo para guardarla en el catálogo.";
+    prodImageStatus.className = "text-xs text-gray-500";
   }
   productModal.classList.remove("hidden");
   productModal.classList.add("flex");
@@ -360,8 +415,11 @@ productForm.addEventListener("submit", async (e) => {
   prodFormError.classList.add("hidden");
 
   const id = document.getElementById("prod-id").value;
+  const barcodeVal = document.getElementById("prod-barcode").value.trim();
+  const imgVal = prodImageUrl.value.trim();
+
   const payload = {
-    codigo_barras: document.getElementById("prod-barcode").value.trim(),
+    codigo_barras: barcodeVal || null,
     categoria: document.getElementById("prod-category").value.trim(),
     nombre: document.getElementById("prod-name").value.trim(),
     precio_costo: parseFloat(document.getElementById("prod-cost").value),
@@ -369,6 +427,9 @@ productForm.addEventListener("submit", async (e) => {
     stock_actual: parseInt(document.getElementById("prod-stock").value, 10),
     stock_minimo: parseInt(document.getElementById("prod-min").value, 10),
   };
+  if (imgVal) {
+    payload.imagen = imgVal;
+  }
 
   const url = id ? `${API_BASE}/productos/${id}` : `${API_BASE}/productos`;
   const method = id ? "PUT" : "POST";

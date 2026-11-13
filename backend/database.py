@@ -40,6 +40,14 @@ def init_db():
             sql_script = INIT_SQL_PATH.read_text(encoding="utf-8")
             conn.executescript(sql_script)
 
+        # Migración ligera: asegurar columna 'imagen' en tabla productos si ya existía la BD
+        cols = [
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(productos)").fetchall()
+        ]
+        if "imagen" not in cols:
+            conn.execute("ALTER TABLE productos ADD COLUMN imagen TEXT;")
+
         # Sembrar usuarios por defecto si no existen
         cur = conn.execute("SELECT COUNT(*) as c FROM usuarios")
         if cur.fetchone()["c"] == 0:

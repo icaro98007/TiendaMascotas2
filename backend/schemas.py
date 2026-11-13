@@ -17,13 +17,14 @@ class TokenResponse(BaseModel):
 
 # --- Productos ---
 class ProductoBase(BaseModel):
-    codigo_barras: str = Field(..., min_length=3)
+    codigo_barras: Optional[str] = None
     nombre: str = Field(..., min_length=2)
     categoria: str = Field(..., min_length=2)
     precio_costo: float = Field(..., ge=0)
     precio_venta: float = Field(..., ge=0)
     stock_actual: int = Field(..., ge=0)
     stock_minimo: int = Field(default=5, ge=0)
+    imagen: Optional[str] = None
 
 
 class ProductoCreate(ProductoBase):
@@ -38,6 +39,7 @@ class ProductoUpdate(BaseModel):
     precio_venta: Optional[float] = Field(default=None, ge=0)
     stock_actual: Optional[int] = Field(default=None, ge=0)
     stock_minimo: Optional[int] = Field(default=None, ge=0)
+    imagen: Optional[str] = None
 
 
 class ProductoResponse(ProductoBase):

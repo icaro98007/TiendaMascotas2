@@ -25,13 +25,14 @@ CREATE TABLE IF NOT EXISTS clientes (
 -- 3. Tabla de Productos
 CREATE TABLE IF NOT EXISTS productos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    codigo_barras TEXT NOT NULL UNIQUE,
+    codigo_barras TEXT UNIQUE,
     nombre TEXT NOT NULL,
     categoria TEXT NOT NULL,
     precio_costo REAL NOT NULL CHECK(precio_costo >= 0),
     precio_venta REAL NOT NULL CHECK(precio_venta >= 0),
     stock_actual INTEGER NOT NULL DEFAULT 0 CHECK(stock_actual >= 0),
-    stock_minimo INTEGER NOT NULL DEFAULT 5 CHECK(stock_minimo >= 0)
+    stock_minimo INTEGER NOT NULL DEFAULT 5 CHECK(stock_minimo >= 0),
+    imagen TEXT
 );
 
 -- 4. Tabla de Ventas

@@ -1,9 +1,12 @@
+import re
+import shutil
 import sqlite3
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -108,6 +111,27 @@ def obtener_producto(producto_id: int):
         conn.close()
 
 
+@app.post("/api/upload-imagen", tags=["Productos"])
+def subir_imagen_producto(archivo: UploadFile = File(...)):
+    """Recibe una imagen subida desde el formulario, la guarda en frontend/img/ y retorna su ruta."""
+    img_dir = Path(__file__).resolve().parent.parent / "frontend" / "img"
+    img_dir.mkdir(parents=True, exist_ok=True)
+
+    nombre_original = archivo.filename or "producto.png"
+    ext = Path(nombre_original).suffix.lower()
+    if ext not in {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}:
+        ext = ".png"
+
+    base_limpia = re.sub(r"[^a-zA-Z0-9_-]", "_", Path(nombre_original).stem)[:30]
+    nombre_final = f"upload_{int(time.time() * 1000)}_{base_limpia}{ext}"
+    destino = img_dir / nombre_final
+
+    with destino.open("wb") as buffer:
+        shutil.copyfileobj(archivo.file, buffer)
+
+    return {"imagen_url": f"img/{nombre_final}", "mensaje": "Imagen guardada exitosamente"}
+
+
 @app.post(
     "/api/productos",
     response_model=ProductoResponse,
@@ -117,21 +141,30 @@ def obtener_producto(producto_id: int):
 def crear_producto(producto: ProductoCreate):
     try:
         with transaction_scope() as conn:
+            codigo = (producto.codigo_barras or "").strip()
+            if not codigo:
+                # Generar código interno automático si el usuario lo deja vacío
+                siguiente = conn.execute(
+                    "SELECT COALESCE(MAX(id), 0) + 1 AS prox FROM productos"
+                ).fetchone()["prox"]
+                codigo = f"SIN-COD-{siguiente:04d}"
+
             cur = conn.execute(
                 """
                 INSERT INTO productos (
                     codigo_barras, nombre, categoria,
-                    precio_costo, precio_venta, stock_actual, stock_minimo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    precio_costo, precio_venta, stock_actual, stock_minimo, imagen
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    producto.codigo_barras.strip(),
+                    codigo,
                     producto.nombre.strip(),
                     producto.categoria.strip(),
                     producto.precio_costo,
                     producto.precio_venta,
                     producto.stock_actual,
                     producto.stock_minimo,
+                    producto.imagen.strip() if producto.imagen else None,
                 ),
             )
             new_id = cur.lastrowid
@@ -160,21 +193,26 @@ def actualizar_producto(producto_id: int, cambios: ProductoUpdate):
             update_data = cambios.model_dump(exclude_unset=True)
             data.update(update_data)
 
+            codigo = (data.get("codigo_barras") or "").strip()
+            if not codigo:
+                codigo = f"SIN-COD-{producto_id:04d}"
+
             conn.execute(
                 """
                 UPDATE productos
                 SET codigo_barras = ?, nombre = ?, categoria = ?,
-                    precio_costo = ?, precio_venta = ?, stock_actual = ?, stock_minimo = ?
+                    precio_costo = ?, precio_venta = ?, stock_actual = ?, stock_minimo = ?, imagen = ?
                 WHERE id = ?
                 """,
                 (
-                    data["codigo_barras"],
+                    codigo,
                     data["nombre"],
                     data["categoria"],
                     data["precio_costo"],
                     data["precio_venta"],
                     data["stock_actual"],
                     data["stock_minimo"],
+                    data.get("imagen"),
                     producto_id,
                 ),
             )
