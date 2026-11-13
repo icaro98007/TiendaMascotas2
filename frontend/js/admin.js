@@ -2,7 +2,7 @@ const API_BASE = window.location.port === "8080"
   ? "http://localhost:8000/api"
   : "/api";
 
-let tokenJWT = localStorage.getItem("petshop_jwt") || null;
+let tokenJWT = null;
 let salesChartInstance = null;
 let inventarioCache = [];
 
@@ -358,10 +358,16 @@ productForm.addEventListener("submit", async (e) => {
   mostrarDashboard();
 });
 
-// Inicializar estado visual al cargar la página
-if (tokenJWT) {
-  mostrarDashboard();
-} else {
-  loginScreen.classList.remove("hidden");
-  dashboardLayout.classList.add("hidden");
+// Cerrar sesión al salir hacia el Punto de Venta para que el cajero no tenga acceso directo al Admin
+const goToPosLink = document.getElementById("go-to-pos-link");
+if (goToPosLink) {
+  goToPosLink.addEventListener("click", () => {
+    tokenJWT = null;
+    localStorage.removeItem("petshop_jwt");
+  });
 }
+
+// Al abrir admin.html siempre mostrar primero el Login de Administrador
+localStorage.removeItem("petshop_jwt");
+loginScreen.classList.remove("hidden");
+dashboardLayout.classList.add("hidden");
