@@ -374,7 +374,7 @@ def registrar_venta(venta: VentaCreate):
 
         for prod_id, cantidad in cantidades_por_producto.items():
             prod = conn.execute(
-                "SELECT id, nombre, precio_venta, stock_actual FROM productos WHERE id = ?",
+                "SELECT id, nombre, precio_costo, precio_venta, stock_actual FROM productos WHERE id = ?",
                 (prod_id,),
             ).fetchone()
 
@@ -401,6 +401,7 @@ def registrar_venta(venta: VentaCreate):
                     "nombre": prod["nombre"],
                     "cantidad": cantidad,
                     "precio_unitario": prod["precio_venta"],
+                    "costo_unitario": prod["precio_costo"],
                     "subtotal": subtotal,
                 }
             )
@@ -419,14 +420,16 @@ def registrar_venta(venta: VentaCreate):
         for det in detalles_para_insertar:
             conn.execute(
                 """
-                INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO detalle_ventas (
+                    venta_id, producto_id, cantidad, precio_unitario, costo_unitario, subtotal
+                ) VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
                     venta_id,
                     det["producto_id"],
                     det["cantidad"],
                     det["precio_unitario"],
+                    det["costo_unitario"],
                     det["subtotal"],
                 ),
             )
@@ -466,16 +469,16 @@ def obtener_dashboard(current_user: dict = Depends(get_current_user)):
     try:
         hoy_str = datetime.now().strftime("%Y-%m-%d")
 
-        # KPIs del día y acumulados
+        # KPIs del día y acumulados calculados EXCLUSIVAMENTE de ventas y detalle_ventas
+        # (Ingresar o editar productos en inventario nunca modifica estas métricas)
         kpi_hoy = conn.execute(
             """
             SELECT
                 COUNT(DISTINCT v.id) AS num_ventas_hoy,
                 COALESCE(SUM(dv.subtotal), 0) AS ingresos_hoy,
-                COALESCE(SUM((dv.precio_unitario - p.precio_costo) * dv.cantidad), 0) AS ganancia_hoy
+                COALESCE(SUM((dv.precio_unitario - dv.costo_unitario) * dv.cantidad), 0) AS ganancia_hoy
             FROM ventas v
-            LEFT JOIN detalle_ventas dv ON dv.venta_id = v.id
-            LEFT JOIN productos p ON p.id = dv.producto_id
+            INNER JOIN detalle_ventas dv ON dv.venta_id = v.id
             WHERE date(v.fecha_venta) = date('now', 'localtime')
             """
         ).fetchone()
@@ -485,10 +488,9 @@ def obtener_dashboard(current_user: dict = Depends(get_current_user)):
             SELECT
                 COUNT(DISTINCT v.id) AS total_transacciones,
                 COALESCE(SUM(dv.subtotal), 0) AS ingresos_totales,
-                COALESCE(SUM((dv.precio_unitario - p.precio_costo) * dv.cantidad), 0) AS ganancia_total
+                COALESCE(SUM((dv.precio_unitario - dv.costo_unitario) * dv.cantidad), 0) AS ganancia_total
             FROM ventas v
-            LEFT JOIN detalle_ventas dv ON dv.venta_id = v.id
-            LEFT JOIN productos p ON p.id = dv.producto_id
+            INNER JOIN detalle_ventas dv ON dv.venta_id = v.id
             """
         ).fetchone()
 

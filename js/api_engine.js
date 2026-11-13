@@ -5,7 +5,7 @@
  * como desplegada en Cloudflare Workers / Pages (*.workers.dev / *.pages.dev) sin errores de red.
  */
 (function () {
-  const STORAGE_KEY = "petshop_cloud_db_v1";
+  const STORAGE_KEY = "petshop_cloud_db_v2";
   const originalFetch = window.fetch.bind(window);
 
   function obtenerFechaHoyISO() {
@@ -140,72 +140,10 @@
       },
     ];
 
-    const clientes = [
-      {
-        id: 1,
-        nombre: "Carlos Rivera",
-        telefono: "555-0101",
-        email: "carlos.rivera@email.com",
-        fecha_registro: `${fechaHoy} 09:00:00`,
-      },
-      {
-        id: 2,
-        nombre: "Ana Gómez",
-        telefono: "555-0202",
-        email: "ana.gomez@email.com",
-        fecha_registro: `${fechaHoy} 09:30:00`,
-      },
-      {
-        id: 3,
-        nombre: "Roberto Díaz",
-        telefono: "555-0303",
-        email: "roberto.diaz@email.com",
-        fecha_registro: `${fechaHoy} 10:15:00`,
-      },
-    ];
-
-    const ventas = [
-      {
-        id: 1,
-        fecha_venta: `${fechaHoy} 09:10:00`,
-        cliente_id: 1,
-        usuario_id: 1,
-        total: 1070.0,
-        ganancia: 344.0,
-      },
-      {
-        id: 2,
-        fecha_venta: `${fechaHoy} 09:35:00`,
-        cliente_id: 2,
-        usuario_id: 1,
-        total: 1558.0,
-        ganancia: 628.0,
-      },
-      {
-        id: 3,
-        fecha_venta: `${fechaHoy} 10:00:00`,
-        cliente_id: null,
-        usuario_id: 1,
-        total: 379.0,
-        ganancia: 184.0,
-      },
-      {
-        id: 4,
-        fecha_venta: `${fechaHoy} 10:20:00`,
-        cliente_id: 3,
-        usuario_id: 1,
-        total: 1380.0,
-        ganancia: 550.0,
-      },
-      {
-        id: 5,
-        fecha_venta: `${fechaHoy} 10:45:00`,
-        cliente_id: null,
-        usuario_id: 1,
-        total: 779.0,
-        ganancia: 329.0,
-      },
-    ];
+    // Iniciar clientes y ventas vacíos para que las estadísticas reflejen
+    // ÚNICAMENTE las ventas reales de productos realizadas en el POS
+    const clientes = [];
+    const ventas = [];
 
     return { productos, clientes, ventas };
   }

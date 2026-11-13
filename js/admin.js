@@ -117,7 +117,7 @@ document.getElementById("logout-btn").addEventListener("click", () => {
   abrirPaginaVentas();
 });
 
-async function mostrarDashboard() {
+async function mostrarDashboard(animar = true) {
   if (!tokenJWT) {
     loginScreen.classList.remove("hidden");
     dashboardLayout.classList.add("hidden");
@@ -145,7 +145,7 @@ async function mostrarDashboard() {
         `${data.usuario_autenticado.username} (${data.usuario_autenticado.rol})`;
     }
 
-    renderizarKPIs(data.kpis);
+    renderizarKPIs(data.kpis, animar);
     renderizarGrafico7Dias(data.historico_7_dias);
     inventarioCache = data.inventario;
     renderizarAlertasCriticas(data.alertas_stock);
@@ -156,11 +156,12 @@ async function mostrarDashboard() {
   }
 }
 
-function renderizarKPIs(kpis) {
-  animarContador(document.getElementById("kpi-ventas-hoy"), kpis.ventas_hoy_monto, true);
-  animarContador(document.getElementById("kpi-ganancia-hoy"), kpis.ganancia_hoy_monto, true);
-  animarContador(document.getElementById("kpi-clientes"), kpis.total_clientes, false);
-  animarContador(document.getElementById("kpi-alertas"), kpis.productos_criticos, false);
+function renderizarKPIs(kpis, animar = true) {
+  const duracion = animar ? 750 : 1;
+  animarContador(document.getElementById("kpi-ventas-hoy"), kpis.ventas_hoy_monto, true, duracion);
+  animarContador(document.getElementById("kpi-ganancia-hoy"), kpis.ganancia_hoy_monto, true, duracion);
+  animarContador(document.getElementById("kpi-clientes"), kpis.total_clientes, false, duracion);
+  animarContador(document.getElementById("kpi-alertas"), kpis.productos_criticos, false, duracion);
 
   document.getElementById("kpi-transacciones-hoy").textContent =
     `${kpis.transacciones_hoy} venta(s) hoy (${kpis.total_transacciones} totales)`;
@@ -448,7 +449,10 @@ productForm.addEventListener("submit", async (e) => {
   }
 
   cerrarModalProducto();
-  mostrarDashboard();
+  mostrarDashboard(false);
+  if (typeof cargarProductos === "function") {
+    cargarProductos("");
+  }
 });
 
 // Garantizar que al cargar la página SIEMPRE arranque directo en la Página de Ventas (POS)

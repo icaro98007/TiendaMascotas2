@@ -48,6 +48,16 @@ def init_db():
         if "imagen" not in cols:
             conn.execute("ALTER TABLE productos ADD COLUMN imagen TEXT;")
 
+        # Asegurar columna 'costo_unitario' en detalle_ventas para aislar estadísticas de ventas
+        cols_dv = [
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(detalle_ventas)").fetchall()
+        ]
+        if "costo_unitario" not in cols_dv:
+            conn.execute(
+                "ALTER TABLE detalle_ventas ADD COLUMN costo_unitario REAL NOT NULL DEFAULT 0;"
+            )
+
         # Sembrar usuarios por defecto si no existen
         cur = conn.execute("SELECT COUNT(*) as c FROM usuarios")
         if cur.fetchone()["c"] == 0:

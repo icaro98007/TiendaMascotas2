@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS detalle_ventas (
     producto_id INTEGER NOT NULL,
     cantidad INTEGER NOT NULL CHECK(cantidad > 0),
     precio_unitario REAL NOT NULL CHECK(precio_unitario >= 0),
+    costo_unitario REAL NOT NULL DEFAULT 0 CHECK(costo_unitario >= 0),
     subtotal REAL NOT NULL CHECK(subtotal >= 0),
     FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE RESTRICT
