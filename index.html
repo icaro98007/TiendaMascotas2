@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Huellitas Felices - Punto de Venta y Panel Administrador</title>
+  <title>MALU MASCOTAS - ¡Todo lo que tu mascota necesita en un solo lugar!</title>
   <link rel="stylesheet" href="css/tailwind.min.css" />
   <script src="js/chart.umd.min.js"></script>
   <style>
@@ -15,6 +15,25 @@
     .gap-3 { gap: 0.75rem; }
     .gap-4 { gap: 1rem; }
     .gap-6 { gap: 1.5rem; }
+    .malu-header-bg {
+      background: linear-gradient(90deg, #163a1c 0%, #1f4e26 55%, #2b6329 100%);
+    }
+    .malu-banner-card {
+      background: linear-gradient(135deg, #1b4322 0%, #2d5a27 60%, #c2410c 100%);
+    }
+    .malu-footer-bg {
+      background: linear-gradient(90deg, #133217 0%, #1d4923 100%);
+    }
+    .malu-logo-crop {
+      object-fit: cover;
+      object-position: center 18%;
+    }
+    .malu-orange-btn {
+      background-color: #d94814;
+    }
+    .malu-orange-btn:hover {
+      background-color: #b83b0f;
+    }
     @keyframes slideInRight {
       from { opacity: 0; transform: translateX(18px); }
       to { opacity: 1; transform: translateX(0); }
@@ -46,26 +65,46 @@
        VISTA 1 (PREDETERMINADA AL ABRIR LA PÁGINA): PÁGINA DE VENTAS (POS)
        ===================================================================== -->
   <div id="pos-app-view" class="h-screen overflow-hidden flex flex-col bg-gray-100">
-    <!-- Barra Superior del POS -->
-    <header class="bg-gray-900 text-white px-6 py-3 flex items-center justify-between shadow-md z-10">
+    <!-- Barra Superior del POS con Identidad MALU MASCOTAS -->
+    <header class="malu-header-bg text-white px-6 py-2.5 flex items-center justify-between shadow-md z-10 border-b-2 border-yellow-500">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-yellow-500 flex items-center justify-center text-gray-900 font-bold text-xl shadow">
-          🐾
-        </div>
+        <img
+          src="img/logo_malu.jpg"
+          alt="Logo Malu Mascotas"
+          class="w-12 h-12 rounded-full border-2 border-yellow-400 shadow-md malu-logo-crop bg-white"
+        />
         <div>
-          <h1 class="font-bold text-lg leading-tight tracking-wide">
-            Huellitas Felices <span class="text-yellow-400 font-normal text-sm">| Página de Ventas (POS)</span>
-          </h1>
-          <p class="text-xs text-gray-400">Atención en mostrador y cobro rápido</p>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-xl leading-tight tracking-wide text-yellow-300">
+              MALU MASCOTAS
+            </h1>
+            <span class="bg-yellow-500 text-gray-900 font-bold text-xs px-2 py-0.5 rounded-full">
+              POS Ventas
+            </span>
+          </div>
+          <p class="text-xs text-green-100">
+            ¡Todo lo que tu mascota necesita en un solo lugar!
+          </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
-        <span id="live-clock" class="text-xs bg-gray-800 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 font-mono"></span>
+      <!-- Datos de Contacto y Domicilios en Header -->
+      <div class="hidden lg:flex items-center gap-4 bg-black bg-opacity-25 px-4 py-1.5 rounded-full border border-green-700 text-xs">
+        <span class="flex items-center gap-1.5 font-bold text-yellow-300">
+          📞 DOMICILIOS: <strong class="text-white text-sm">3142572868</strong>
+        </span>
+        <span class="text-green-300">|</span>
+        <span class="flex items-center gap-1 text-green-100 font-medium">
+          📍 Conjunto Hayuelos 3, Modelia
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span id="live-clock" class="text-xs bg-black bg-opacity-30 text-yellow-200 px-3 py-1.5 rounded-lg border border-green-700 font-mono"></span>
         <button
           id="open-admin-panel-btn"
           type="button"
-          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-md transition shadow"
+          class="flex items-center gap-2 malu-orange-btn text-white text-sm font-bold px-4 py-2 rounded-md transition shadow-md border border-yellow-400"
         >
           <span>⚙️ Panel Administrador</span>
         </button>
@@ -74,8 +113,35 @@
 
     <!-- Contenedor Principal 70 / 30 de Ventas -->
     <main class="flex-1 flex overflow-hidden">
-      <!-- IZQUIERDA (70%): Buscador, Categorías y Catálogo -->
-      <section style="width: 70%;" class="h-full flex flex-col p-6 overflow-hidden">
+      <!-- IZQUIERDA (70%): Banner de Marca, Buscador, Categorías y Catálogo -->
+      <section style="width: 70%;" class="h-full flex flex-col p-5 overflow-hidden">
+
+        <!-- Banner Personalizado de MALU MASCOTAS -->
+        <div class="malu-banner-card text-white rounded-xl p-3.5 mb-4 shadow-md flex items-center justify-between gap-4 border border-yellow-500">
+          <div class="flex items-center gap-3.5">
+            <img
+              src="img/banner_malu.jpg"
+              alt="Banner Malu Mascotas"
+              class="w-16 h-16 rounded-lg object-cover border-2 border-yellow-300 shadow shrink-0 bg-white"
+            />
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-extrabold uppercase tracking-wider bg-yellow-400 text-gray-900 px-2 py-0.5 rounded">
+                  🐾 Malu Mascotas
+                </span>
+                <span class="text-xs text-yellow-200 font-semibold">
+                  • Arena Sanitaria para Gatos • Golosinas para Mascotas • BR-CAT &amp; B-DOG
+                </span>
+              </div>
+              <p class="text-sm font-bold text-white mt-1">
+                ¡Todo lo que tu mascota necesita en un solo lugar!
+              </p>
+              <p class="text-xs text-yellow-200 mt-0.5">
+                📞 <strong>Domicilios: 3142572868</strong> &nbsp;&bull;&nbsp; 📍 <strong>Conjunto Hayuelos 3, Modelia</strong>
+              </p>
+            </div>
+          </div>
+        </div>
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5 flex flex-col gap-3">
           <div class="relative flex items-center">
             <input
@@ -160,13 +226,29 @@
           <button
             id="open-checkout-btn"
             disabled
-            class="w-full py-3 px-4 rounded-md font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition shadow flex items-center justify-center gap-2 text-base"
+            class="w-full py-3 px-4 rounded-md font-bold text-white malu-orange-btn disabled:opacity-50 transition shadow flex items-center justify-center gap-2 text-base"
           >
-            <span>Proceder al Pago</span>
+            <span>🛒 Proceder al Pago</span>
           </button>
         </div>
       </aside>
     </main>
+
+    <!-- Barra Inferior de Contacto (Inspirada en el pie del Banner MALU MASCOTAS) -->
+    <footer class="malu-footer-bg text-white px-6 py-2 flex flex-wrap items-center justify-between text-xs border-t border-green-800">
+      <div class="flex items-center gap-2">
+        <span class="font-extrabold text-yellow-400">🐾 MALU MASCOTAS</span>
+        <span class="text-green-200 hidden sm:inline">— ¡Todo lo que tu mascota necesita en un solo lugar!</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="font-bold text-white">
+          📞 DOMICILIOS: <span class="text-yellow-400 font-extrabold text-sm">3142572868</span>
+        </span>
+        <span class="font-semibold text-green-100">
+          📍 Conjunto Hayuelos 3, Modelia
+        </span>
+      </div>
+    </footer>
   </div>
 
   <!-- =====================================================================
@@ -182,12 +264,17 @@
           class="bg-white p-8 rounded-xl shadow-md max-w-md mx-auto border border-gray-100"
         >
           <div class="text-center mb-6">
-            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-xl font-bold mb-3 border border-blue-100">
-              🐾
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">Panel de Administración</h2>
-            <p class="text-sm text-gray-500 mt-1">
-              Ingresa tus credenciales para acceder a métricas, stock y reportes
+            <img
+              src="img/logo_malu.jpg"
+              alt="Logo Malu Mascotas"
+              class="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-yellow-500 shadow-md malu-logo-crop bg-white"
+            />
+            <h2 class="text-2xl font-bold text-gray-900">MALU MASCOTAS</h2>
+            <p class="text-xs font-semibold text-orange-600 uppercase tracking-wider mt-0.5">
+              Panel de Administración
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              📍 Conjunto Hayuelos 3, Modelia &bull; 📞 3142572868
             </p>
           </div>
 
@@ -252,16 +339,18 @@
 
       <!-- 2B. Dashboard Operativo Completo (KPIs, Gráfica, Stock, Ventas) -->
       <div id="dashboard-layout" class="hidden space-y-8">
-        <!-- Navbar Horizontal -->
+        <!-- Navbar Horizontal con Identidad MALU MASCOTAS -->
         <header class="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-6 flex-wrap">
-            <div class="flex items-center gap-2.5 pr-4 border-r border-gray-200">
-              <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-                🐾
-              </div>
+            <div class="flex items-center gap-3 pr-4 border-r border-gray-200">
+              <img
+                src="img/logo_malu.jpg"
+                alt="Logo Malu Mascotas"
+                class="w-11 h-11 rounded-full border-2 border-yellow-500 shadow-sm malu-logo-crop bg-white"
+              />
               <div>
-                <span class="font-bold text-gray-900 block leading-none">Huellitas Felices</span>
-                <span class="text-xs text-gray-500">Panel Administrador</span>
+                <span class="font-extrabold text-gray-900 block leading-none">MALU MASCOTAS</span>
+                <span class="text-xs text-gray-500">📍 Conjunto Hayuelos 3, Modelia | 📞 3142572868</span>
               </div>
             </div>
 
